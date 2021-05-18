@@ -1,0 +1,8 @@
+[package]
+name = 'secret'
+version = '1.0.0'
+authors = ['kenmueller <kenmueller0@gmail.com>']
+edition = '2018'
+
+[dependencies]
+home = '0.5.3'
