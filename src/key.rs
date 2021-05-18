@@ -27,3 +27,7 @@ pub fn get() -> io::Result<Option<String>> {
 
 	Ok(Some(key))
 }
+
+pub fn set(key: String) -> io::Result<()> {
+	file::write(get_path()?, key)
+}

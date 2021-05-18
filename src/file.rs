@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io;
+use std::io::{self, Write};
 use std::path::Path;
 
 fn on_error(error: io::Error) -> io::Result<Option<File>> {
@@ -20,4 +20,9 @@ pub fn open<P: AsRef<Path>>(path: P) -> io::Result<Option<File>> {
 		Ok(file) => Ok(Some(file)),
 		Err(error) => on_error(error),
 	}
+}
+
+pub fn write<P: AsRef<Path>>(path: P, data: String) -> io::Result<()> {
+	let mut file = File::create(path)?;
+	file.write_all(data.as_bytes())
 }
