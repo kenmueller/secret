@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate magic_crypt;
 
+mod clip;
 mod crypt;
 mod file;
 mod input;
@@ -20,7 +21,10 @@ fn did_quit() -> io::Result<bool> {
 			print!("Encrypt message: ");
 			stdout().flush()?;
 
-			println!("{}", encrypt(&password, &input::get()?));
+			let message = encrypt(&password, &input::get()?);
+
+			clip::copy(message.clone())?;
+			println!("{} (copied to clipboard)", message);
 		}
 		"d" => {
 			let password = password::get_always()?;
@@ -28,13 +32,21 @@ fn did_quit() -> io::Result<bool> {
 			print!("Decrypt message: ");
 			stdout().flush()?;
 
-			println!("{}", decrypt(&password, &input::get()?)?);
+			let message = decrypt(&password, &input::get()?)?;
+
+			clip::copy(message.clone())?;
+			println!("{} (copied to clipboard)", message);
 		}
 		"p" => {
 			print!("Set password: ");
 			stdout().flush()?;
 
-			password::set(&input::get()?)?;
+			let password = input::get()?;
+
+			password::set(&password)?;
+			clip::copy(password)?;
+
+			println!("copied password to clipboard");
 		}
 		"q" => return Ok(true),
 		_ => {

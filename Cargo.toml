@@ -7,3 +7,4 @@ edition = '2018'
 [dependencies]
 home = '0.5.3'
 magic-crypt = '3.1.8'
+clipboard = '0.5.0'
