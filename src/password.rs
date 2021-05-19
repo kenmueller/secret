@@ -4,30 +4,25 @@ use crate::file;
 use crate::input;
 use home::home_dir;
 use std::io::{self, stdout, BufReader, Read, Write};
+use std::path::PathBuf;
 
 const NAME: &str = ".secret";
 
-fn get_path() -> io::Result<String> {
+fn get_path() -> io::Result<PathBuf> {
     home_dir()
         .ok_or(io::Error::new(
             io::ErrorKind::NotFound,
             "Home directory not found",
         ))
-        .and_then(|home| {
-            home.join(NAME)
-                .to_str()
-                .and_then(|path| Some(String::from(path)))
-                .ok_or(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "Invalid home directory path",
-                ))
-        })
+        .and_then(|home| Ok(home.join(NAME)))
+}
+
+fn crypt_password() -> String {
+    String::from(NAME)
 }
 
 pub fn get() -> io::Result<Option<String>> {
-    let path = get_path()?;
-
-    let file = match file::open(&path)? {
+    let file = match file::open(&get_path()?)? {
         Some(file) => file,
         None => return Ok(None),
     };
@@ -36,7 +31,7 @@ pub fn get() -> io::Result<Option<String>> {
     let mut password = String::new();
 
     reader.read_to_string(&mut password)?;
-    let password = crypt::decrypt(&path, &password)?;
+    let password = crypt::decrypt(&crypt_password(), &password)?;
 
     if password.is_empty() {
         return Err(io::Error::new(
@@ -64,7 +59,7 @@ pub fn set(password: &String) -> io::Result<()> {
     }
 
     let path = get_path()?;
-    let password = crypt::encrypt(&path, password);
+    let password = crypt::encrypt(&crypt_password(), password);
 
     file::write(&path, &password)
 }
