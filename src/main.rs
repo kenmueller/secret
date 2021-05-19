@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate magic_crypt;
+
 mod crypt;
 mod file;
 mod input;
@@ -17,7 +20,7 @@ fn did_quit() -> io::Result<bool> {
 			print!("Encrypt message: ");
 			stdout().flush()?;
 
-			println!("{}", encrypt(password, input::get()?));
+			println!("{}", encrypt(&password, &input::get()?));
 		}
 		"d" => {
 			let password = password::get_always()?;
@@ -25,13 +28,13 @@ fn did_quit() -> io::Result<bool> {
 			print!("Decrypt message: ");
 			stdout().flush()?;
 
-			println!("{}", decrypt(password, input::get()?));
+			println!("{}", decrypt(&password, &input::get()?)?);
 		}
 		"p" => {
 			print!("Set password: ");
 			stdout().flush()?;
 
-			password::set(input::get()?)?;
+			password::set(&input::get()?)?;
 		}
 		"q" => return Ok(true),
 		_ => {
