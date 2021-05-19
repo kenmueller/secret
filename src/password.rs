@@ -1,22 +1,33 @@
+use crate::clip;
+use crate::crypt;
 use crate::file;
 use crate::input;
 use home::home_dir;
 use std::io::{self, stdout, BufReader, Read, Write};
-use std::path::PathBuf;
 
 const NAME: &str = ".secret";
 
-fn get_path() -> io::Result<PathBuf> {
+fn get_path() -> io::Result<String> {
     home_dir()
-        .and_then(|home| Some(home.join(NAME)))
         .ok_or(io::Error::new(
             io::ErrorKind::NotFound,
             "Home directory not found",
         ))
+        .and_then(|home| {
+            home.join(NAME)
+                .to_str()
+                .and_then(|path| Some(String::from(path)))
+                .ok_or(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Invalid home directory path",
+                ))
+        })
 }
 
 pub fn get() -> io::Result<Option<String>> {
-    let file = match file::open(&get_path()?)? {
+    let path = get_path()?;
+
+    let file = match file::open(&path)? {
         Some(file) => file,
         None => return Ok(None),
     };
@@ -25,6 +36,7 @@ pub fn get() -> io::Result<Option<String>> {
     let mut password = String::new();
 
     reader.read_to_string(&mut password)?;
+    let password = crypt::decrypt(&path, &password)?;
 
     if password.is_empty() {
         return Err(io::Error::new(
@@ -51,7 +63,10 @@ pub fn set(password: &String) -> io::Result<()> {
         ));
     }
 
-    file::write(&get_path()?, password)
+    let path = get_path()?;
+    let password = crypt::encrypt(&path, password);
+
+    file::write(&path, &password)
 }
 
 pub fn exists() -> io::Result<bool> {
@@ -77,8 +92,14 @@ pub fn assert_exists() -> io::Result<()> {
         }
     };
 
-    set(&password).or_else(|error| {
+    if let Err(error) = set(&password) {
         println!("{}", error);
-        assert_exists()
-    })
+        return assert_exists();
+    }
+
+    if let Ok(_) = clip::copy(password) {
+        println!("copied password to clipboard");
+    }
+
+    Ok(())
 }

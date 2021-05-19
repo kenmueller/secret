@@ -22,9 +22,13 @@ fn did_quit() -> io::Result<bool> {
 			stdout().flush()?;
 
 			let message = encrypt(&password, &input::get()?);
+			print!("{}", message);
 
-			clip::copy(message.clone())?;
-			println!("{} (copied to clipboard)", message);
+			if let Ok(_) = clip::copy(message.clone()) {
+				print!(" (copied to clipboard)");
+			}
+
+			println!();
 		}
 		"d" => {
 			let password = password::get_always()?;
@@ -33,20 +37,24 @@ fn did_quit() -> io::Result<bool> {
 			stdout().flush()?;
 
 			let message = decrypt(&password, &input::get()?)?;
+			print!("{}", message);
 
-			clip::copy(message.clone())?;
-			println!("{} (copied to clipboard)", message);
+			if let Ok(_) = clip::copy(message.clone()) {
+				print!(" (copied to clipboard)");
+			}
+
+			println!();
 		}
 		"p" => {
 			print!("Set password: ");
 			stdout().flush()?;
 
 			let password = input::get()?;
-
 			password::set(&password)?;
-			clip::copy(password)?;
 
-			println!("copied password to clipboard");
+			if let Ok(_) = clip::copy(password) {
+				println!("copied password to clipboard");
+			}
 		}
 		"q" => return Ok(true),
 		_ => {
